@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/Users.mjs";
 import { generateToken } from "../utils/generateToken.mjs";
+import jwt from "jsonwebtoken"
 export const registerUser = async (req, res) => {
   try {
     const { username, password, email } = req.body;
@@ -51,6 +52,9 @@ export const loginUser = async (req, res) => {
       });
     }
     const token=generateToken(user._id)
+    console.log(token)
+    const decoded = jwt.decode(token);
+    console.log(decoded);
     return res.status(200).json({
       success: true,
       message: "login successful",
