@@ -45,29 +45,9 @@ export const create = async (req, res) => {
 
 export const read = async (req, res) => {
   try {
-    const id = req.params.id;
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "ID is required to find a todo",
-      });
-    }
-    const targetTodo = await todo.findById(id);
-    if (!targetTodo) {
-      return res.status(404).json({
-        success: false,
-        message: "Todo not found",
-      });
-    }
-    if (targetTodo.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not allowed to access this todo",
-      });
-    }
     return res.status(200).json({
       success: true,
-      targetTodo,
+      targetTodo: req.targetTodo,
     });
   } catch (err) {
     return res.status(500).json({
@@ -78,4 +58,43 @@ export const read = async (req, res) => {
   }
 };
 
+export const deleteTodo = async (req, res) => {
+  try {
+    await req.targetTodo.deleteOne();
+    res.status(200).json({
+      success: true,
+      msg: "The Todo was sucessfully deleted from the database",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: "Sorry an error occured",
+      error: err.message,
+    });
+  }
+};
 
+export const update = async (req, res) => {
+  try {
+    const { title, description, completed } = req.body;
+    const targetTodo = req.targetTodo; 
+
+    if (title) targetTodo.title = title;
+    if (description) targetTodo.description = description;
+    if (completed !== undefined) targetTodo.completed = completed;
+
+    await targetTodo.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Todo updated successfully",
+      todo: targetTodo,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: "Sorry an error occured",
+      error: err.message,
+    });
+  }
+};
