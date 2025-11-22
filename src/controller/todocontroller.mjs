@@ -1,11 +1,12 @@
+import mongoose from "mongoose";
 import todo from "../models/todoschemas.mjs";
 export const create = async (req, res) => {
   try {
-    const { title, description, completed, emergency } = req.body;
+    const { title, description, emergency } = req.body;
     if (!title) {
       return res.json({
         success: false,
-        message: "Please enter the title and description for sure",
+        message: "Please enter the title ",
       });
     }
     const titleExist = await todo.findOne({ title });
@@ -19,7 +20,7 @@ export const create = async (req, res) => {
     const newTodo = todo.create({
       title,
       description,
-      completed,
+      completed:false,
       emergency,
       user: req.user._id,
     });
@@ -94,6 +95,34 @@ export const update = async (req, res) => {
     return res.status(500).json({
       success: false,
       msg: "Sorry an error occured",
+      error: err.message,
+    });
+  }
+};
+
+export const getAllTodos = async (req, res) => {
+  try {
+    const paramUserId = req.params?.userId;
+    const userId = paramUserId ?? req.user?._id;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User id is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(String(userId))) {
+      return res.status(400).json({ success: false, message: "Invalid user id format" });
+    }
+
+    const todos = await todo.find({ user: userId }).sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      count: todos.length,
+      todos,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: "Unable to fetch todos",
       error: err.message,
     });
   }
