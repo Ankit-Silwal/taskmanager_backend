@@ -19,8 +19,8 @@ export const protect=async (req,res,next)=>{
         success:false,
         message:"The user wasnt found"
       })
-      next();
     }
+    next();
   }catch(err){
     return res.json({
       success:false,
