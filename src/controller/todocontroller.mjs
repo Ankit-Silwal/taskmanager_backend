@@ -17,10 +17,10 @@ export const create = async (req, res) => {
           "The same title exists already you may update the description thoo",
       });
     }
-    const newTodo = todo.create({
+    const newTodo = await todo.create({
       title,
       description,
-      completed:false,
+      completed: false,
       emergency,
       user: req.user._id,
     });
@@ -29,9 +29,9 @@ export const create = async (req, res) => {
       todo: {
         title: newTodo.title,
         description: newTodo.description,
-        completed: newTodo.description,
+        completed: newTodo.completed,
         emergency: newTodo.emergency,
-        user: req.user._id,
+        user: newTodo.user,
         createdAt: newTodo.createdAt,
       },
     });
@@ -77,12 +77,27 @@ export const deleteTodo = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
-    const { title, description, completed } = req.body;
-    const targetTodo = req.targetTodo; 
+    const { title, description, completed, emergency } = req.body;
+    const targetTodo = req.targetTodo;
 
-    if (title) targetTodo.title = title;
-    if (description) targetTodo.description = description;
-    if (completed !== undefined) targetTodo.completed = completed;
+    if (title !== undefined) targetTodo.title = title;
+    if (description !== undefined) targetTodo.description = description;
+
+    const parseBool = (v) => {
+      if (typeof v === 'boolean') return v;
+      if (typeof v === 'string') {
+        const s = v.trim().toLowerCase();
+        if (s === 'true') return true;
+        if (s === 'false') return false;
+      }
+      return undefined;
+    };
+
+    const parsedCompleted = parseBool(completed);
+    if (parsedCompleted !== undefined) targetTodo.completed = parsedCompleted;
+
+    const parsedEmergency = parseBool(emergency);
+    if (parsedEmergency !== undefined) targetTodo.emergency = parsedEmergency;
 
     await targetTodo.save();
 
